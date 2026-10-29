@@ -63,6 +63,8 @@ def commit_count(a, b, cwd):
 def run_bisect(good, bad, command, timeout, log_file, cwd):
     """Run `git bisect start` + `git bisect run <command>`.
 
+    Two separate invocations: `git bisect start <bad> <good>` marks the
+    endpoints, then `git bisect run <command>` drives the search.
     Returns (outcome, first_bad, commits_tested). outcome is
     'success' when a first bad commit was found, else 'failed'.
     """
@@ -70,21 +72,32 @@ def run_bisect(good, bad, command, timeout, log_file, cwd):
     # normal shell one-liners (&&, ;, quoting).
     shell = "cmd" if os.name == "nt" else "sh"
     exec_arg = "/c" if os.name == "nt" else "-c"
-    cmd = ["git", "bisect", "start", good, bad, "run", shell, exec_arg, command]
+
+    out = ""
+    start = subprocess.run(
+        ["git", "bisect", "start", bad, good],
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    out += start.stdout or ""
+    if start.returncode != 0:
+        return "failed", None, 0
 
     try:
         proc = subprocess.run(
-            cmd,
+            ["git", "bisect", "run", shell, exec_arg, command],
             cwd=cwd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
             timeout=timeout,
         )
-        out = proc.stdout or ""
+        out += proc.stdout or ""
     except subprocess.TimeoutExpired as exc:
         raw = exc.output or ""
-        out = raw.decode("utf-8", "replace") if isinstance(raw, bytes) else raw
+        out += raw.decode("utf-8", "replace") if isinstance(raw, bytes) else raw
         out += "\n# bisect_helper: wall-clock timeout after {}s\n".format(timeout)
 
     if "first bad commit" not in out:
