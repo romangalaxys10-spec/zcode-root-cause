@@ -1,0 +1,13 @@
+{
+  "name": "root-cause-marketplace",
+  "plugins": [
+    {
+      "name": "root-cause",
+      "source": "./",
+      "version": "0.1.0",
+      "description": "Debug-loop breaker: evidence-based bug diagnosis instead of blind fix attempts. Falsifiable symptom, minimal repro before code changes, git bisect of the introducing change, root-cause claims with [HYPOTHESIS]/[VERIFIED]/[REFUTED] status, confirm/refute experiment, max 3 fix attempts then stop and report, full experiment log in debug-report.md.",
+      "displayName": "Root Cause",
+      "category": "developer-tools"
+    }
+  ]
+}
